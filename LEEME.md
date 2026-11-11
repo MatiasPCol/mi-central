@@ -30,9 +30,11 @@ Desvincular un dispositivo le quita el acceso al instante y borra sus datos loca
 ## Asistente (IA)
 
 - La pantalla Asistente manda la conversación y un resumen en texto de lo que hay en la app (sin fotos) a `/api/ia`.
-- El servidor se lo pasa a Claude (`supabase/functions/central/ia.ts`) y devuelve la respuesta. La IA solo lee: no cambia datos.
-- Necesita el secreto `ANTHROPIC_API_KEY` en la función de Supabase. Sin él, la app avisa que falta y lo demás sigue igual.
-- Cada pregunta se cobra en la cuenta de Anthropic de esa llave; conviene ponerle un tope de gasto en la consola.
+- El servidor se lo pasa a Gemini (`supabase/functions/central/ia.js`) y devuelve la respuesta. La IA solo lee: no cambia datos.
+- Es gratis: usa el plan gratuito de Google. La llave se crea en Google AI Studio, en un proyecto **sin facturación**, y se guarda
+  como secreto `GEMINI_API_KEY` en la función de Supabase. Sin tarjeta no puede cobrar; al pasarse del cupo del día, la app lo avisa.
+- El modelo es `gemini-3.1-flash-lite`. Para cambiarlo sin tocar código: secreto `GEMINI_MODELO`.
+- En el plan gratuito Google puede usar lo que se envía para mejorar sus modelos, y personas suyas pueden revisarlo.
 
 ## Probar en el computador
 

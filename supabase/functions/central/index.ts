@@ -1,17 +1,17 @@
 // Entrada del servidor de Mi Central en Supabase (Edge Function "central").
 import postgres from 'npm:postgres@3.4.5';
 import { crearServidor } from './servidor.js';
-import { crearIA } from './ia.ts';
+import { crearIA } from './ia.js';
 
 const sql = postgres(Deno.env.get('SUPABASE_DB_URL')!, { max: 2, prepare: false, idle_timeout: 20, connect_timeout: 10 });
 
 // Sin la llave, la app avisa que la IA no está configurada y todo lo demás sigue igual.
-const llaveIA = Deno.env.get('ANTHROPIC_API_KEY');
+const llaveIA = Deno.env.get('GEMINI_API_KEY');
 
 const manejar = crearServidor({
   bd: { consulta: (texto: string, parametros: unknown[] = []) => sql.unsafe(texto, parametros as never[]) as unknown as Promise<any[]> },
   prefijo: '/central',
-  ia: llaveIA ? crearIA(llaveIA) : undefined,
+  ia: llaveIA ? crearIA({ llave: llaveIA, modelo: Deno.env.get('GEMINI_MODELO') || undefined }) : undefined,
   enSegundoPlano: (p: Promise<unknown>) => {
     const tarea = p.catch((e) => console.error('segundo plano:', e?.message ?? e));
     (globalThis as any).EdgeRuntime?.waitUntil?.(tarea);

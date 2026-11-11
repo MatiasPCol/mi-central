@@ -61,3 +61,50 @@ test('sin sesión no se pregunta', async () => {
   const r = await pedir(async () => ({ texto: 'no' }), pregunta, {});
   assert.equal(r.estado, 401);
 });
+
+// ---------- El paso a Gemini, con un Google de mentira ----------
+
+const { crearIA } = await import('../supabase/functions/central/ia.js');
+
+/** @param {number} estado @param {any} cuerpo */
+const google = (estado, cuerpo) => {
+  /** @type {any} */
+  const visto = {};
+  const pedirFalso = async (/** @type {any} */ url, /** @type {any} */ op) => {
+    Object.assign(visto, { url, cabeceras: op.headers, cuerpo: JSON.parse(op.body) });
+    return new Response(JSON.stringify(cuerpo), { status: estado });
+  };
+  return { visto, ia: crearIA({ llave: 'llave-falsa', pedir: /** @type {any} */ (pedirFalso) }) };
+};
+const charla = { mensajes: [{ rol: 'yo', texto: 'hola' }, { rol: 'ia', texto: 'quiubo' }, { rol: 'yo', texto: '¿y la plata?' }], contexto: 'Tiene $ 5.000.' };
+
+test('arma el pedido a Gemini y saca el texto', async () => {
+  const g = google(200, { candidates: [{ content: { parts: [{ text: 'pensando', thought: true }, { text: 'Vas ' }, { text: 'bien.' }] }, finishReason: 'STOP' }] });
+  assert.deepEqual(await g.ia(/** @type {any} */ (charla)), { texto: 'Vas bien.' });
+  assert.match(g.visto.url, /\/v1beta\/models\/gemini-3\.1-flash-lite:generateContent$/);
+  assert.equal(g.visto.cabeceras['x-goog-api-key'], 'llave-falsa');
+  assert.deepEqual(g.visto.cuerpo.contents.map((/** @type {any} */ c) => c.role), ['user', 'model', 'user']);
+  assert.match(g.visto.cuerpo.systemInstruction.parts[0].text, /Tiene \$ 5\.000\.$/);
+});
+
+test('explica cada fallo de Gemini con su código', async () => {
+  /** @type {[number, any, string][]} */
+  const casos = [
+    [429, { error: { status: 'RESOURCE_EXHAUSTED', message: 'quota' } }, 'ia_limite'],
+    [400, { error: { status: 'INVALID_ARGUMENT', message: 'API key not valid.' } }, 'ia_llave'],
+    [403, { error: { message: 'denied' } }, 'ia_llave'],
+    [503, { error: { message: 'overloaded' } }, 'ia_ocupada'],
+    [404, { error: { message: 'model not found' } }, 'ia_fallo'],
+    [200, { candidates: [] }, 'ia_fallo'],
+  ];
+  for (const [estado, cuerpo, codigo] of casos) {
+    await assert.rejects(google(estado, cuerpo).ia(/** @type {any} */ (charla)), (/** @type {any} */ e) => e.codigo === codigo, `${estado} → ${codigo}`);
+  }
+});
+
+test('si Google bloquea la pregunta o corta la respuesta, lo dice', async () => {
+  let r = await google(200, { promptFeedback: { blockReason: 'SAFETY' } }).ia(/** @type {any} */ (charla));
+  assert.match(r.texto, /no te puedo ayudar/);
+  r = await google(200, { candidates: [{ content: { parts: [{ text: 'Mitad' }] }, finishReason: 'MAX_TOKENS' }] }).ia(/** @type {any} */ (charla));
+  assert.match(r.texto, /^Mitad\n\n\(Se me cortó/);
+});

@@ -42,6 +42,7 @@ const MENSAJES = {
   origen_no_permitido: 'La app se abrió desde una dirección no permitida.',
   ia_sin_configurar: 'La IA todavía no tiene su llave. Falta ponerla en Supabase.',
   ia_llave: 'La llave de la IA no sirve. Revísala en Supabase.',
+  ia_limite: 'Se acabaron las preguntas gratis por ahora. Intenta en un rato o mañana.',
   ia_ocupada: 'La IA está muy ocupada. Intenta en un momento.',
   ia_fallo: 'La IA no pudo responder. Intenta de nuevo.',
   ia_pregunta_invalida: 'Esa pregunta es demasiado larga.',
