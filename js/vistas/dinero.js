@@ -1,4 +1,4 @@
-// Dinero: registro de ingresos y gastos, con el balance del mes.
+// Dinero: registro de ingresos y gastos, con lo que tienes y el balance del mes.
 
 import { html } from '../nucleo/html.js';
 import { E, filas, fila, guardar, borrar, restaurar, pintar } from '../datos/estado.js';
@@ -38,6 +38,29 @@ export function resumenMes(mes) {
   return { lista, ingresos, gastos, balance: ingresos - gastos };
 }
 
+/** Lo que tienes en total: todos los ingresos menos todos los gastos. */
+export function saldoTotal() {
+  return filas('movimientos').reduce((s, m) => s + (m.tipo === 'ingreso' ? 1 : -1) * Number(m.monto), 0);
+}
+
+/** Tarjeta grande de la pantalla "Hoy": lo que tienes, el mes y dos botones para anotar al instante. */
+export function tarjetaDinero() {
+  const hoy = fechaISO();
+  const r = resumenMes(hoy.slice(0, 7));
+  const total = saldoTotal();
+  const gastoHoy = r.lista.filter((m) => m.tipo === 'gasto' && m.fecha === hoy).reduce((s, m) => s + Number(m.monto), 0);
+  return html`<div class="tarjeta destacada plata">
+    <a class="plata-cabeza" href="#/dinero"><span class="rotulo">${icono('dinero')} Tu plata</span><span class="ver">Ver todo ${icono('flecha')}</span></a>
+    <a href="#/dinero"><b class="grande ${total < 0 ? 'rojo' : ''}">${pesos(total)}</b></a>
+    <div class="par"><span><i class="punto"></i> Entró este mes <b>${pesos(r.ingresos)}</b></span><span><i class="punto mal"></i> Salió <b>${pesos(r.gastos)}</b></span></div>
+    ${gastoHoy ? html`<p class="plata-hoy">Hoy llevas gastado <b>${pesos(gastoHoy)}</b></p>` : ''}
+    <div class="botones">
+      <a class="boton" href="#/dinero/nuevo/gasto">${icono('suma')} Gasto</a>
+      <a class="boton" href="#/dinero/nuevo/ingreso">${icono('suma')} Ingreso</a>
+    </div>
+  </div>`;
+}
+
 function hojaMovimiento() {
   const b = E.ui.borrador;
   if (!b) return '';
@@ -64,13 +87,16 @@ function hojaMovimiento() {
 }
 
 export const vistaDinero = {
-  /** @param {{ id: string | null }} ruta */
+  /** @param {{ id: string | null, extra?: string | null }} ruta */
   alEntrar(ruta) {
     E.ui.borrador = null;
     if (!ruta.id) return;
     const m = ruta.id === 'nuevo' ? null : fila('movimientos', ruta.id);
     if (m) E.ui.borrador = { ...m, montoTxt: String(Math.round(Number(m.monto))) };
-    else if (ruta.id === 'nuevo') E.ui.borrador = { id: nuevoId(), nueva: true, tipo: 'gasto', montoTxt: '', categoria: 'Comida', nota: '', fecha: fechaISO() };
+    else if (ruta.id === 'nuevo') {
+      const tipo = ruta.extra === 'ingreso' ? 'ingreso' : 'gasto';
+      E.ui.borrador = { id: nuevoId(), nueva: true, tipo, montoTxt: '', categoria: CATEGORIAS[tipo][0], nota: '', fecha: fechaISO() };
+    }
   },
   pintar() {
     const mes = E.ui.mesDinero ?? fechaISO().slice(0, 7);
@@ -81,7 +107,8 @@ export const vistaDinero = {
     for (const m of lista.filter((x) => x.tipo === 'gasto')) porCategoria[m.categoria || 'Otro'] = (porCategoria[m.categoria || 'Otro'] ?? 0) + Number(m.monto);
     const categorias = Object.entries(porCategoria).sort((a, b) => b[1] - a[1]);
     const fechas = Array.from(new Set(lista.map((m) => m.fecha)));
-    return html`${cabecera('Dinero', { atras: '#/mas' })}
+    const total = saldoTotal();
+    return html`${cabecera('Dinero')}
       <main class="contenido">
         <div class="mes">
           <button class="boton-icono" data-a="dinero-mes" data-s="-1" aria-label="Mes anterior">${icono('atras')}</button>
@@ -92,7 +119,13 @@ export const vistaDinero = {
           <span class="rotulo">Balance del mes</span>
           <b class="grande ${r.balance < 0 ? 'rojo' : ''}">${pesos(r.balance)}</b>
           <div class="par"><span><i class="punto"></i> Ingresos <b>${pesos(r.ingresos)}</b></span><span><i class="punto mal"></i> Gastos <b>${pesos(r.gastos)}</b></span></div>
+          <div class="plata-total"><span>Tienes en total</span><b class="${total < 0 ? 'rojo' : 'verde'}">${pesos(total)}</b></div>
         </div>
+        <div class="botones" style="margin-top:10px">
+          <a class="boton" href="#/dinero/nuevo/gasto">${icono('suma')} Gasto</a>
+          <a class="boton" href="#/dinero/nuevo/ingreso">${icono('suma')} Ingreso</a>
+        </div>
+        ${lista.length ? html`<button class="boton ancho ia-boton" data-a="ia-preguntar" data-q="Revisa mi plata de ${nombreMes(mes)}: en qué se me va, cómo voy frente a lo que entra y qué me recomiendas.">${icono('chispa')} Que la IA revise este mes</button>` : ''}
         ${categorias.length ? html`<section class="seccion"><h2>En qué se fue</h2><div class="tarjeta">
           ${categorias.map(([c, v]) => html`<div class="renglon"><span>${c}</span><b>${pesos(v)}</b></div>
             <div class="barra roja"><i style="width:${Math.round((v / r.gastos) * 100)}%"></i></div>`)}

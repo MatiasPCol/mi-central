@@ -27,6 +27,13 @@ Desvincular un dispositivo le quita el acceso al instante y borra sus datos loca
 - Recordatorios de tareas, resumen diario y respaldo semanal. Los dispara `central.tic()`, que corre cada minuto.
 - Correo a Gmail y Google Calendar con `puente-google/Codigo.gs`, que se instala desde Ajustes.
 
+## Asistente (IA)
+
+- La pantalla Asistente manda la conversación y un resumen en texto de lo que hay en la app (sin fotos) a `/api/ia`.
+- El servidor se lo pasa a Claude (`supabase/functions/central/ia.ts`) y devuelve la respuesta. La IA solo lee: no cambia datos.
+- Necesita el secreto `ANTHROPIC_API_KEY` en la función de Supabase. Sin él, la app avisa que falta y lo demás sigue igual.
+- Cada pregunta se cobra en la cuenta de Anthropic de esa llave; conviene ponerle un tope de gasto en la consola.
+
 ## Probar en el computador
 
 ```bash
@@ -38,7 +45,7 @@ Abre `http://localhost:5173/?demo` para ver la app con datos inventados.
 Pruebas del servidor, sin instalar Node (usa el motor de VS Code):
 
 ```bash
-bash herramientas/node.sh --test pruebas/cripto.test.mjs
+bash herramientas/node.sh --test pruebas/cripto.test.mjs pruebas/ia.test.mjs
 ```
 
 ## Carpetas

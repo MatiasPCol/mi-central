@@ -40,6 +40,11 @@ const MENSAJES = {
   no_vinculado: 'Este dispositivo no está vinculado.',
   revocado: 'Este dispositivo fue desvinculado.',
   origen_no_permitido: 'La app se abrió desde una dirección no permitida.',
+  ia_sin_configurar: 'La IA todavía no tiene su llave. Falta ponerla en Supabase.',
+  ia_llave: 'La llave de la IA no sirve. Revísala en Supabase.',
+  ia_ocupada: 'La IA está muy ocupada. Intenta en un momento.',
+  ia_fallo: 'La IA no pudo responder. Intenta de nuevo.',
+  ia_pregunta_invalida: 'Esa pregunta es demasiado larga.',
   suscripcion_invalida: 'Este navegador usa un servicio de notificaciones no admitido.',
 };
 

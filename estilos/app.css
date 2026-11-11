@@ -167,9 +167,6 @@ textarea.entrada { resize: vertical; min-height: 92px; line-height: 1.45; }
 .semana i { width: 9px; height: 26px; border-radius: 6px; background: var(--capa-2); }
 .semana i.si { background: var(--degradado); }
 .semana i.hoy { outline: 2px solid color-mix(in srgb, var(--acento) 50%, transparent); outline-offset: 1px; }
-.dinero-mini { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-.dinero-mini span { color: var(--suave); font-weight: 600; font-size: 14px; }
-.dinero-mini b { font-size: 18px; font-weight: 780; }
 
 /* ---------- Dinero ---------- */
 .mes { display: flex; align-items: center; justify-content: space-between; margin: 2px 0 10px; }
@@ -375,3 +372,55 @@ body::before { background:
 .anillo b { position: relative; font-size: 18px; font-weight: 800; }
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ---------- Dinero al frente ---------- */
+.plata { margin-top: 14px; }
+.plata a { color: inherit; display: block; }
+.plata-cabeza { display: flex !important; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
+.plata-cabeza .rotulo, .plata-cabeza .ver { display: inline-flex; align-items: center; gap: 6px; }
+.plata-cabeza .rotulo svg { width: 17px; height: 17px; color: var(--acento); }
+.plata-cabeza .ver { font-size: 13px; font-weight: 650; color: var(--acento); }
+.plata-cabeza .ver svg { width: 14px; height: 14px; }
+.plata .grande { font-size: 42px; margin: 6px 0 12px; }
+.plata-hoy { margin: 10px 0 0; font-size: 13.5px; color: var(--suave); }
+.plata-hoy b { color: var(--texto); }
+.plata .botones { margin-top: 14px; position: relative; z-index: 1; }
+.plata .botones .boton { display: inline-flex; min-height: 44px; background: color-mix(in srgb, var(--capa-2) 80%, transparent); }
+.plata-total { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--linea); font-size: 14px; color: var(--suave); }
+.plata-total b { font-size: 17px; font-weight: 780; }
+.nav a { min-width: 0; }
+
+/* ---------- Asistente ---------- */
+.boton-icono.ia { color: var(--violeta); }
+.ia-boton { margin-top: 10px; color: var(--violeta); border-color: color-mix(in srgb, var(--violeta) 35%, transparent); }
+.ia-tarjeta { display: flex; align-items: center; gap: 12px; margin-top: 10px; color: inherit; border-color: color-mix(in srgb, var(--violeta) 30%, transparent); }
+.ia-tarjeta .redondo, .ia-hola .redondo { background: color-mix(in srgb, var(--violeta) 16%, transparent); color: var(--violeta); }
+.ia-tarjeta .cuerpo { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ia-tarjeta .cuerpo span { font-size: 13px; color: var(--suave); }
+.ia-tarjeta > svg { width: 18px; height: 18px; color: var(--suave); flex: none; }
+.charla { display: flex; flex-direction: column; gap: 10px; padding-bottom: calc(176px + var(--abajo)); }
+.ia-hola { text-align: center; padding: 34px 8px 8px; }
+.ia-hola .redondo { margin: 0 auto 12px; width: 56px; height: 56px; border-radius: 19px; }
+.ia-hola h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+.ia-hola p { color: var(--suave); margin: 6px auto 18px; max-width: 34ch; }
+.ia-hola .chips { justify-content: center; }
+.burbuja { max-width: 88%; padding: 11px 15px; border-radius: 20px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
+.burbuja.yo { align-self: flex-end; background: var(--acento-suave); border: 1px solid color-mix(in srgb, var(--acento) 30%, transparent); border-bottom-right-radius: 7px; }
+.burbuja.ia { align-self: flex-start; background: var(--capa); border: 1px solid var(--linea); border-bottom-left-radius: 7px; }
+.burbuja.error { align-self: stretch; max-width: none; background: color-mix(in srgb, var(--rojo) 12%, transparent); color: var(--rojo); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.burbuja.error .boton { min-height: 38px; color: var(--texto); }
+.pensando { display: flex; gap: 5px; padding: 15px 17px; }
+.pensando i { width: 7px; height: 7px; border-radius: 50%; background: var(--violeta); animation: pensar 1.1s ease-in-out infinite; }
+.pensando i:nth-child(2) { animation-delay: 0.15s; }
+.pensando i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes pensar { 0%, 100% { opacity: 0.25; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-3px); } }
+.ia-limpiar { align-self: center; margin-top: 6px; font-size: 13px; font-weight: 650; color: var(--suave); padding: 8px 12px; }
+.redactar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(88px + var(--abajo)); z-index: 6; width: min(calc(100% - 24px), 696px); display: flex; gap: 8px; padding: 7px; border-radius: 22px; background: color-mix(in srgb, var(--capa) 88%, transparent); backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4); border: 1px solid color-mix(in srgb, var(--violeta) 22%, var(--linea)); box-shadow: var(--sombra-suave); }
+.redactar .entrada { flex: 1; background: transparent; border-color: transparent; }
+.redactar .entrada:focus { box-shadow: none; border-color: transparent; }
+.redactar .boton { flex: none; width: 48px; padding: 0; }
+.redactar .boton svg { width: 20px; height: 20px; }
+@media (max-width: 400px) {
+  .nav a { font-size: 9.5px; }
+  .plata .grande { font-size: 34px; }
+}

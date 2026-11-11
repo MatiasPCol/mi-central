@@ -1,7 +1,7 @@
 // Service worker de Mi Central: deja abrir la app sin conexión y muestra las notificaciones.
 // Con conexión siempre trae los archivos nuevos; sin conexión usa la última copia guardada.
 
-const CACHE = 'mi-central-v3';
+const CACHE = 'mi-central-v4';
 const BASE = ['/', '/estilos/app.css', '/js/app.js', '/js/tema.js', '/manifest.webmanifest', '/iconos/icono-192.png'];
 
 self.addEventListener('install', (ev) => {
