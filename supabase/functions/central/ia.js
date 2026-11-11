@@ -28,27 +28,30 @@ export class ErrorIA extends Error {
 }
 
 /**
- * @param {{ llave: string, modelo?: string, pedir?: typeof fetch }} op
+ * @param {{ llave: string, modelo?: string, pedir?: typeof fetch, espera?: number }} op
  * @returns {(p: { mensajes: { rol: 'yo' | 'ia', texto: string }[], contexto: string }) => Promise<{ texto: string }>}
  */
-export function crearIA({ llave, modelo = MODELO_BASE, pedir = fetch }) {
+export function crearIA({ llave, modelo = MODELO_BASE, pedir = fetch, espera = 1500 }) {
   return async function responder({ mensajes, contexto }) {
-    /** @type {Response} */
-    let r;
-    try {
+    const cuerpo = JSON.stringify({
+      systemInstruction: { parts: [{ text: `${INSTRUCCIONES}\n\nResumen de la app en este momento:\n\n${contexto}` }] },
+      contents: mensajes.map((m) => ({ role: m.rol === 'ia' ? 'model' : 'user', parts: [{ text: m.texto }] })),
+      generationConfig: { maxOutputTokens: 4096 },
+    });
+    // Si Google está saturado o no contesta, se intenta una vez más antes de avisar. El cupo agotado (429) no se reintenta.
+    /** @type {Response | null} */
+    let r = null;
+    for (let intento = 0; intento < 2; intento++) {
+      if (intento) await new Promise((listo) => setTimeout(listo, espera));
       r = await pedir(`${BASE}/${encodeURIComponent(modelo)}:generateContent`, {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-goog-api-key': llave },
-        signal: AbortSignal.timeout(60000),
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: `${INSTRUCCIONES}\n\nResumen de la app en este momento:\n\n${contexto}` }] },
-          contents: mensajes.map((m) => ({ role: m.rol === 'ia' ? 'model' : 'user', parts: [{ text: m.texto }] })),
-          generationConfig: { maxOutputTokens: 4096 },
-        }),
-      });
-    } catch {
-      throw new ErrorIA('ia_ocupada', 503);
+        signal: AbortSignal.timeout(45000),
+        body: cuerpo,
+      }).catch(() => null);
+      if (r && r.status < 500) break;
     }
+    if (!r) throw new ErrorIA('ia_ocupada', 503);
     const datos = await r.json().catch(() => ({}));
     if (!r.ok) {
       const motivo = String(datos?.error?.message ?? '').slice(0, 300);

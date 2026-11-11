@@ -74,7 +74,7 @@ const google = (estado, cuerpo) => {
     Object.assign(visto, { url, cabeceras: op.headers, cuerpo: JSON.parse(op.body) });
     return new Response(JSON.stringify(cuerpo), { status: estado });
   };
-  return { visto, ia: crearIA({ llave: 'llave-falsa', pedir: /** @type {any} */ (pedirFalso) }) };
+  return { visto, ia: crearIA({ llave: 'llave-falsa', espera: 1, pedir: /** @type {any} */ (pedirFalso) }) };
 };
 const charla = { mensajes: [{ rol: 'yo', texto: 'hola' }, { rol: 'ia', texto: 'quiubo' }, { rol: 'yo', texto: '¿y la plata?' }], contexto: 'Tiene $ 5.000.' };
 
@@ -107,4 +107,30 @@ test('si Google bloquea la pregunta o corta la respuesta, lo dice', async () => 
   assert.match(r.texto, /no te puedo ayudar/);
   r = await google(200, { candidates: [{ content: { parts: [{ text: 'Mitad' }] }, finishReason: 'MAX_TOKENS' }] }).ia(/** @type {any} */ (charla));
   assert.match(r.texto, /^Mitad\n\n\(Se me cortó/);
+});
+
+test('si Google está saturado reintenta una vez; el cupo agotado no se reintenta', async () => {
+  /** @param {number[]} estados */
+  const serie = (estados) => {
+    let llamadas = 0;
+    const pedirFalso = async () => {
+      const estado = estados[Math.min(llamadas++, estados.length - 1)];
+      if (!estado) throw new Error('sin red');
+      return new Response(JSON.stringify(estado === 200 ? { candidates: [{ content: { parts: [{ text: 'Listo.' }] } }] } : { error: { message: 'x' } }), { status: estado });
+    };
+    return { ia: crearIA({ llave: 'k', espera: 1, pedir: /** @type {any} */ (pedirFalso) }), llamadas: () => llamadas };
+  };
+  let s = serie([503, 200]);
+  assert.deepEqual(await s.ia(/** @type {any} */ (charla)), { texto: 'Listo.' });
+  assert.equal(s.llamadas(), 2);
+  s = serie([0, 200]);
+  assert.deepEqual(await s.ia(/** @type {any} */ (charla)), { texto: 'Listo.' });
+  s = serie([503, 503]);
+  await assert.rejects(s.ia(/** @type {any} */ (charla)), (/** @type {any} */ e) => e.codigo === 'ia_ocupada');
+  assert.equal(s.llamadas(), 2);
+  s = serie([0, 0]);
+  await assert.rejects(s.ia(/** @type {any} */ (charla)), (/** @type {any} */ e) => e.codigo === 'ia_ocupada');
+  s = serie([429, 200]);
+  await assert.rejects(s.ia(/** @type {any} */ (charla)), (/** @type {any} */ e) => e.codigo === 'ia_limite');
+  assert.equal(s.llamadas(), 1);
 });
