@@ -14,8 +14,8 @@ import { hace } from '../nucleo/util.js';
 export const vistaMas = {
   pintar() {
     const enlaces = [
+      ['#/ia', 'Asistente', 'Pregúntale lo que sea sobre lo tuyo', 'chispa'],
       ['#/metas', 'Metas', 'A dónde quieres llegar', 'meta'],
-      ['#/dinero', 'Dinero', 'Tus ingresos y gastos', 'dinero'],
       ['#/materias', 'Materias y calificaciones', '¿Gano el año? Y tu horario', 'libro'],
       ['#/datos', 'Mis datos', 'Perfil, habilidades y proyectos', 'persona'],
       ['#/buscar', 'Buscar', 'En todo lo tuyo a la vez', 'buscar'],

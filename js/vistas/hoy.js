@@ -6,7 +6,7 @@ import { registrar, avisar } from '../nucleo/acciones.js';
 import { cabecera, vacio } from './comun.js';
 import { filaTarea } from './tareas.js';
 import { progresoMeta } from './metas.js';
-import { resumenMes, pesos } from './dinero.js';
+import { tarjetaDinero } from './dinero.js';
 import { rutinasDeHoy, tarjetaRutina } from './rutinas.js';
 import { icono } from './comun.js';
 import { fechaISO, sumarDias, fechaLarga, saludo, horaCorta, nuevoId } from '../nucleo/util.js';
@@ -25,7 +25,6 @@ export const vistaHoy = {
     for (let d = diasHechos.has(hoy) ? hoy : sumarDias(hoy, -1); diasHechos.has(d); d = sumarDias(d, -1)) racha++;
     const semana = Array.from({ length: 7 }, (_, i) => sumarDias(hoy, i - 6));
     const hechasSemana = filas('tareas').filter((t) => t.hecha && t.hecha_en && fechaISO(new Date(t.hecha_en)) >= semana[0]).length;
-    const dinero = resumenMes(hoy.slice(0, 7));
     const dia = new Date().getDay();
     const clases = filas('materias')
       .flatMap((m) => (m.horario ?? []).filter((/** @type {any} */ h) => Number(h.dia) === dia).map((/** @type {any} */ h) => ({ ...h, nombre: m.nombre })))
@@ -42,6 +41,7 @@ export const vistaHoy = {
           <div class="cifra ${atrasadas.length ? 'mal' : ''}"><b>${atrasadas.length}</b><span>${atrasadas.length === 1 ? 'atrasada' : 'atrasadas'}</span></div>
           <div class="cifra"><b>${hechasHoy}</b><span>${hechasHoy === 1 ? 'hecha hoy' : 'hechas hoy'}</span></div>
         </div>
+        ${tarjetaDinero()}
         <form class="rapida" data-envio="hoy-rapida">
           <input class="entrada" data-campo-libre="rapida" placeholder="Tarea rápida para hoy" maxlength="300" autocomplete="off" aria-label="Tarea rápida para hoy">
           <button class="boton primario">Añadir</button>
@@ -53,9 +53,11 @@ export const vistaHoy = {
             <span>${hechasSemana} ${hechasSemana === 1 ? 'tarea hecha' : 'tareas hechas'} en 7 días</span></div>
           <div class="semana">${semana.map((d) => html`<i class="${diasHechos.has(d) ? 'si' : ''} ${d === hoy ? 'hoy' : ''}"></i>`)}</div>
         </div>
-        ${dinero.lista.length ? html`<a class="tarjeta dinero-mini" href="#/dinero">
-          <span>Balance del mes</span><b class="${dinero.balance < 0 ? 'rojo' : 'verde'}">${pesos(dinero.balance)}</b>
-        </a>` : ''}
+        <a class="tarjeta ia-tarjeta" href="#/ia">
+          <span class="redondo">${icono('chispa')}</span>
+          <div class="cuerpo"><b>Pregúntale a tu asistente</b><span>Conoce tus tareas, tu plata, tus metas y tus notas</span></div>
+          ${icono('flecha')}
+        </a>
 
         ${rutinasDeHoy().length ? html`<section class="seccion"><h2>Rutinas de hoy <a href="#/rutinas">Ver todas</a></h2>${rutinasDeHoy().map(tarjetaRutina)}</section>` : ''}
         ${atrasadas.length ? html`<section class="seccion"><h2>Atrasadas</h2><div class="lista">${atrasadas.map(filaTarea)}</div></section>` : ''}

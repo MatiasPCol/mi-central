@@ -9,6 +9,9 @@ const COOKIE_SEGURA = '__Host-mc_s';
 const COOKIE_LOCAL = 'mc_s';
 const DURACION_COOKIE = 60 * 24 * 3600;
 const MAX_CUERPO = 3_000_000;
+const MAX_TURNOS_IA = 30;
+const MAX_TEXTO_IA = 8000;
+const MAX_CONTEXTO_IA = 200_000;
 
 /**
  * @param {{
@@ -16,6 +19,7 @@ const MAX_CUERPO = 3_000_000;
  *   prefijo: string,
  *   enSegundoPlano?: (p: Promise<any>) => void,
  *   mantenerVivo?: () => Promise<void>,
+ *   ia?: (p: { mensajes: { rol: 'yo' | 'ia', texto: string }[], contexto: string }) => Promise<{ texto: string }>,
  * }} deps
  */
 export function crearServidor(deps) {
@@ -247,6 +251,25 @@ export function crearServidor(deps) {
       if (!r.ok) return fallo(400, r.error);
       if (cambios.length > 0) enSegundoPlano(despachar());
       return responder(r, renovar);
+    }
+
+    // El asistente: la app manda la conversación y un resumen de sus datos; aquí solo se valida y se reenvía.
+    if (ruta === '/api/ia' && metodo === 'POST') {
+      if (!deps.ia) return fallo(503, 'ia_sin_configurar');
+      const mensajes = Array.isArray(cuerpo.mensajes) ? cuerpo.mensajes : [];
+      const contexto = typeof cuerpo.contexto === 'string' ? cuerpo.contexto : '';
+      const validos = mensajes.length > 0 && mensajes.length <= MAX_TURNOS_IA && contexto.length <= MAX_CONTEXTO_IA
+        && mensajes.every((/** @type {any} */ m) => (m?.rol === 'yo' || m?.rol === 'ia') && typeof m.texto === 'string' && m.texto.trim() && m.texto.length <= MAX_TEXTO_IA)
+        && mensajes[0].rol === 'yo' && mensajes[mensajes.length - 1].rol === 'yo';
+      if (!validos) return fallo(400, 'ia_pregunta_invalida');
+      try {
+        const r = await deps.ia({ mensajes: mensajes.map((/** @type {any} */ m) => ({ rol: m.rol, texto: m.texto })), contexto });
+        return responder({ ok: true, texto: r.texto }, renovar);
+      } catch (e) {
+        const codigo = /** @type {any} */ (e)?.codigo;
+        if (typeof codigo !== 'string' || !codigo.startsWith('ia_')) throw e;
+        return fallo(/** @type {any} */ (e).estado ?? 502, codigo);
+      }
     }
 
     if (ruta === '/api/actividad' && metodo === 'GET') {
