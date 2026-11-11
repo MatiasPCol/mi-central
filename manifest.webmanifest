@@ -1,0 +1,22 @@
+{
+  "name": "Mi Central",
+  "short_name": "Mi Central",
+  "description": "Mis tareas, notas, metas y datos en un solo lugar.",
+  "lang": "es",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1218",
+  "theme_color": "#0f1218",
+  "icons": [
+    { "src": "/iconos/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/iconos/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/iconos/icono-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Nueva tarea", "url": "/#/tareas/nueva" },
+    { "name": "Nueva nota", "url": "/#/notas/nueva" }
+  ],
+  "share_target": { "action": "/", "method": "GET", "params": { "title": "titulo", "text": "texto", "url": "enlace" } }
+}

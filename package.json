@@ -1,0 +1,6 @@
+{
+  "name": "mi-central",
+  "private": true,
+  "type": "module",
+  "description": "App personal privada de Matias: tareas, notas, metas y datos."
+}
