@@ -281,3 +281,26 @@ textarea.entrada { resize: vertical; min-height: 92px; line-height: 1.45; }
 .franja.ojo { background: color-mix(in srgb, var(--ambar) 16%, transparent); color: var(--ambar); }
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ---------- Ajustes para pantallas de celular: que ningún campo se monte sobre otro ---------- */
+.dos { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.dos:has(.chips) { grid-template-columns: minmax(0, 1fr); }
+.dos > *, .paso > *, .campo, .fila > * { min-width: 0; }
+.entrada { min-width: 0; max-width: 100%; }
+input[type=date].entrada, input[type=time].entrada { -webkit-appearance: none; appearance: none; display: block; text-align: left; }
+input[type=date].entrada::-webkit-date-and-time-value, input[type=time].entrada::-webkit-date-and-time-value { text-align: left; min-height: 1.4em; }
+.paso { flex-wrap: wrap; }
+.paso .entrada { flex: 1 1 96px; }
+.paso select.entrada { flex: 1 1 100%; }
+.interruptor input[type=time] { flex: none; width: auto; }
+.fila .boton { flex: none; min-height: 40px; padding: 0 13px; font-size: 14px; }
+.fila { flex-wrap: wrap; }
+.fila .cuerpo { flex: 1 1 140px; }
+.hoja h2, .cabecera { min-width: 0; }
+@media (max-width: 400px) {
+  .cifra { padding: 12px; }
+  .cifra b { font-size: 26px; }
+  .estado-sync { font-size: 0; gap: 0; padding: 8px; }
+  .grande { font-size: 32px; }
+  .racha .semana i { width: 7px; }
+}
