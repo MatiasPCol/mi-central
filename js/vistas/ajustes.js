@@ -14,6 +14,7 @@ import { hace } from '../nucleo/util.js';
 export const vistaMas = {
   pintar() {
     const enlaces = [
+      ['#/metas', 'Metas', 'A dónde quieres llegar', 'meta'],
       ['#/dinero', 'Dinero', 'Tus ingresos y gastos', 'dinero'],
       ['#/materias', 'Materias y calificaciones', '¿Gano el año? Y tu horario', 'libro'],
       ['#/datos', 'Mis datos', 'Perfil, habilidades y proyectos', 'persona'],
@@ -114,7 +115,6 @@ export const vistaAjustes = {
   pintar() {
     const a = E.ui.ajustes ?? {};
     const yo = E.dispositivo;
-    const tema = document.documentElement.getAttribute('data-tema') ?? 'sistema';
     const p = prefs();
     const textoAvisos = { no: 'Este navegador no las permite', bloqueado: 'Bloqueadas en el navegador', apagado: 'Apagadas en este dispositivo', activo: 'Activas en este dispositivo' }[/** @type {string} */ (a.avisos)] ?? '';
     return html`${cabecera('Ajustes', { atras: '#/mas' })}
@@ -162,10 +162,6 @@ export const vistaAjustes = {
           </div></div>`}
         </section>
 
-        <section class="seccion"><h2>Apariencia</h2><div class="chips">
-          ${[['sistema', 'Como el sistema'], ['oscuro', 'Oscuro'], ['claro', 'Claro']].map(([v, t]) => html`<button class="chip ${tema === v ? 'activo' : ''}" data-a="tema" data-v="${v}">${t}</button>`)}
-        </div></section>
-
         ${E.demo ? '' : html`<section class="seccion"><h2>Tus datos</h2><div class="botones">
           <button class="boton" data-a="respaldo-bajar">Descargar respaldo</button>
           <button class="boton peligro" data-a="desvincular-este">Desvincular este dispositivo</button>
@@ -179,14 +175,6 @@ registrar({
   'pref-cambiar': (el) => guardarPrefs({ [/** @type {string} */ (el.dataset.clave)]: /** @type {HTMLInputElement} */ (el).checked }),
   'bloqueo-cambiar': (el) => { acceso.ponerBloqueo(/** @type {HTMLInputElement} */ (el).checked); pintar(); },
   'pref-hora': (el) => { const v = /** @type {HTMLInputElement} */ (el).value; if (v) guardarPrefs({ resumen_hora: v }); },
-  tema: (el) => {
-    const v = el.dataset.v;
-    try {
-      if (v === 'sistema') { localStorage.removeItem('mc-tema'); document.documentElement.removeAttribute('data-tema'); }
-      else { localStorage.setItem('mc-tema', /** @type {string} */ (v)); document.documentElement.setAttribute('data-tema', /** @type {string} */ (v)); }
-    } catch { /* sin almacenamiento */ }
-    pintar();
-  },
   'huella-activar': () => intentar(async () => { await acceso.activarHuella(); avisar('Huella activada'); }),
   'avisos-activar': () => intentar(async () => { await activarAvisos(); avisar('Notificaciones activadas'); }),
   'avisos-apagar': () => intentar(desactivarAvisos),

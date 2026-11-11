@@ -57,6 +57,13 @@ export function cargarDemo() {
     { grupo: 'Habilidades', titulo: 'Git y GitHub', contenido: 'Junior', orden: 2 },
     { grupo: 'Idiomas', titulo: 'Español', contenido: 'Nativo', orden: 1 },
   ]);
+  const dias = (/** @type {number[]} */ atras) => atras.map((n) => sumarDias(hoy, -n));
+  poner('rutinas', [
+    { nombre: 'Estudiar inglés 20 minutos', color: 'azul', dias: [0, 1, 2, 3, 4, 5, 6], hora: '18:00:00', hechos: dias([1, 2, 3, 4, 5]), orden: 1 },
+    { nombre: 'Hacer ejercicio', color: 'verde', dias: [0, 1, 2, 3, 4, 5, 6], hora: '06:30:00', hechos: dias([0, 1, 2]), orden: 2 },
+    { nombre: 'Leer 10 páginas', color: 'morado', dias: [0, 1, 2, 3, 4, 5, 6], hora: null, hechos: dias([1, 3]), orden: 3 },
+    { nombre: 'Practicar Python', color: 'amarillo', dias: [(new Date().getDay() + 1) % 7, (new Date().getDay() + 3) % 7], hora: null, hechos: [], orden: 4 },
+  ]);
   poner('movimientos', [
     { tipo: 'ingreso', monto: 80000, categoria: 'Mesada', nota: '', fecha: sumarDias(hoy, -6) },
     { tipo: 'ingreso', monto: 150000, categoria: 'Proyecto', nota: 'Página para un cliente', fecha: sumarDias(hoy, -3) },

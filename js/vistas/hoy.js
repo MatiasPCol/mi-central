@@ -7,6 +7,7 @@ import { cabecera, vacio } from './comun.js';
 import { filaTarea } from './tareas.js';
 import { progresoMeta } from './metas.js';
 import { resumenMes, pesos } from './dinero.js';
+import { rutinasDeHoy, tarjetaRutina } from './rutinas.js';
 import { icono } from './comun.js';
 import { fechaISO, sumarDias, fechaLarga, saludo, horaCorta, nuevoId } from '../nucleo/util.js';
 
@@ -35,7 +36,7 @@ export const vistaHoy = {
 
     return html`${cabecera('Mi Central')}
       <main class="contenido">
-        <div class="saludo"><h2>${saludo()}, Matias</h2><p>${fechaLarga()}</p></div>
+        <div class="saludo"><h2>${saludo()}, <span class="brillo">Matias</span><i class="cursor"></i></h2><p>${fechaLarga()}</p></div>
         <div class="cifras">
           <div class="cifra"><b>${deHoy.length}</b><span>para hoy</span></div>
           <div class="cifra ${atrasadas.length ? 'mal' : ''}"><b>${atrasadas.length}</b><span>${atrasadas.length === 1 ? 'atrasada' : 'atrasadas'}</span></div>
@@ -56,6 +57,7 @@ export const vistaHoy = {
           <span>Balance del mes</span><b class="${dinero.balance < 0 ? 'rojo' : 'verde'}">${pesos(dinero.balance)}</b>
         </a>` : ''}
 
+        ${rutinasDeHoy().length ? html`<section class="seccion"><h2>Rutinas de hoy <a href="#/rutinas">Ver todas</a></h2>${rutinasDeHoy().map(tarjetaRutina)}</section>` : ''}
         ${atrasadas.length ? html`<section class="seccion"><h2>Atrasadas</h2><div class="lista">${atrasadas.map(filaTarea)}</div></section>` : ''}
         <section class="seccion"><h2>Para hoy <a href="#/tareas">Ver todas</a></h2>
           ${deHoy.length ? html`<div class="lista">${deHoy.map(filaTarea)}</div>`

@@ -16,14 +16,15 @@ import { vistaDatos } from './vistas/datos.js';
 import { vistaMas, vistaActividad, vistaAjustes } from './vistas/ajustes.js';
 import { vistaDinero } from './vistas/dinero.js';
 import { vistaBuscar } from './vistas/buscar.js';
+import { vistaRutinas } from './vistas/rutinas.js';
 
 /** @type {Record<string, { pintar: (r: any) => unknown, alEntrar?: (r: any) => void }>} */
 const VISTAS = {
   hoy: vistaHoy, tareas: vistaTareas, notas: vistaNotas, metas: vistaMetas, materias: vistaMaterias,
-  datos: vistaDatos, dinero: vistaDinero, buscar: vistaBuscar, mas: vistaMas, actividad: vistaActividad, ajustes: vistaAjustes,
+  datos: vistaDatos, dinero: vistaDinero, rutinas: vistaRutinas, buscar: vistaBuscar, mas: vistaMas, actividad: vistaActividad, ajustes: vistaAjustes,
 };
-const NAV = [['hoy', 'Hoy', 'casa'], ['tareas', 'Tareas', 'tareas'], ['notas', 'Notas', 'nota'], ['metas', 'Metas', 'meta'], ['mas', 'Más', 'mas']];
-const EN_MAS = ['mas', 'materias', 'datos', 'dinero', 'buscar', 'actividad', 'ajustes'];
+const NAV = [['hoy', 'Hoy', 'casa'], ['tareas', 'Tareas', 'tareas'], ['rutinas', 'Rutinas', 'ciclo'], ['notas', 'Notas', 'nota'], ['mas', 'Más', 'mas']];
+const EN_MAS = ['mas', 'metas', 'materias', 'datos', 'dinero', 'buscar', 'actividad', 'ajustes'];
 
 const raiz = /** @type {HTMLElement} */ (document.getElementById('app'));
 
@@ -47,6 +48,7 @@ function pantalla() {
   const activa = EN_MAS.includes(r.vista) ? 'mas' : r.vista;
   return html`
     ${E.demo ? html`<div class="franja ojo">Modo demostración: datos inventados, nada se guarda.</div>` : ''}
+    <div class="destellos" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
     ${VISTAS[r.vista].pintar(r)}
     <nav class="nav">${NAV.map(([v, t, i]) => html`<a href="#/${v}" class="${activa === v ? 'activa' : ''}">${icono(i)}${t}</a>`)}</nav>
     ${E.ui.toast ? html`<div class="toast" role="status">${E.ui.toast.texto}${E.ui.toast.etiqueta ? html`<button data-a="toast-boton">${E.ui.toast.etiqueta}</button>` : ''}</div>` : ''}`;

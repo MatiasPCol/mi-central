@@ -99,7 +99,7 @@ export const vistaMetas = {
     const todas = filas('metas').sort((a, b) => (a.fecha_objetivo ?? '9999').localeCompare(b.fecha_objetivo ?? '9999'));
     const activas = todas.filter((m) => m.estado === 'activa');
     const otras = todas.filter((m) => m.estado !== 'activa');
-    return html`${cabecera('Metas')}
+    return html`${cabecera('Metas', { atras: '#/mas' })}
       <main class="contenido">
         ${!todas.length ? vacio('¿A dónde quieres llegar?', 'Escribe tu primera meta a futuro y pártela en pasos.') : ''}
         ${PLAZOS.map(([v, t]) => {
