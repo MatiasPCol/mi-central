@@ -194,3 +194,25 @@ export async function desvincularEste() {
   if (E.dispositivo) await pedir('/dispositivos/revocar', { id: E.dispositivo.id }).catch(() => {});
   await olvidar();
 }
+
+// ---------- Bloqueo al abrir (solo en este dispositivo) ----------
+
+export function bloqueoActivo() {
+  try { return localStorage.getItem('mc-bloqueo') === '1'; } catch { return false; }
+}
+
+/** @param {boolean} si */
+export function ponerBloqueo(si) {
+  try { if (si) localStorage.setItem('mc-bloqueo', '1'); else localStorage.removeItem('mc-bloqueo'); } catch { /* sin almacenamiento */ }
+}
+
+/** Pide la huella o Face ID al teléfono. Si el teléfono la acepta, se abre la app. */
+export async function desbloquear() {
+  const c = /** @type {PublicKeyCredential} */ (await navigator.credentials.get({
+    publicKey: { challenge: crypto.getRandomValues(new Uint8Array(32)), rpId: location.hostname, userVerification: 'required', timeout: 60000 },
+  }));
+  const datos = new Uint8Array(/** @type {AuthenticatorAssertionResponse} */ (c.response).authenticatorData);
+  if ((datos[32] & 0x04) === 0) throw new Error('El teléfono no verificó quién eres.');
+  E.candado = false;
+  pintar();
+}

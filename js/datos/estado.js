@@ -5,7 +5,7 @@ import * as almacen from './almacen.js';
 import { pedir, ErrorApi } from './api.js';
 import { CONFIG_NOTAS } from '../calculo/notas.js';
 
-export const TABLAS = ['tareas', 'notas', 'materias', 'metas', 'proyectos', 'datos', 'preferencias'];
+export const TABLAS = ['tareas', 'notas', 'materias', 'metas', 'proyectos', 'datos', 'movimientos', 'fotos', 'preferencias'];
 export const ID_PREFS = '00000000-0000-4000-8000-000000000001';
 
 const PREFS_BASE = {
@@ -20,6 +20,8 @@ export const E = {
   /** @type {'cargando' | 'vincular' | 'bloqueada' | 'app'} */
   modo: 'cargando',
   demo: false,
+  /** La app está abierta pero tapada hasta que el teléfono verifique la huella. */
+  candado: false,
   /** @type {{ id: string, nombre: string, con_huella: boolean } | null} */
   dispositivo: null,
   /** @type {Record<string, Map<string, Fila>>} */

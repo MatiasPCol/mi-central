@@ -6,6 +6,8 @@ import { registrar, avisar } from '../nucleo/acciones.js';
 import { cabecera, vacio } from './comun.js';
 import { filaTarea } from './tareas.js';
 import { progresoMeta } from './metas.js';
+import { resumenMes, pesos } from './dinero.js';
+import { icono } from './comun.js';
 import { fechaISO, sumarDias, fechaLarga, saludo, horaCorta, nuevoId } from '../nucleo/util.js';
 
 export const vistaHoy = {
@@ -15,7 +17,14 @@ export const vistaHoy = {
     const deHoy = pend.filter((t) => t.fecha === hoy).sort((a, b) => (a.hora ?? '99').localeCompare(b.hora ?? '99') || a.prioridad - b.prioridad);
     const atrasadas = pend.filter((t) => t.fecha && t.fecha < hoy).sort((a, b) => a.fecha.localeCompare(b.fecha));
     const proximas = pend.filter((t) => t.fecha && t.fecha > hoy && t.fecha <= sumarDias(hoy, 7)).sort((a, b) => a.fecha.localeCompare(b.fecha));
-    const hechasHoy = filas('tareas').filter((t) => t.hecha && (t.hecha_en ?? '').slice(0, 10) === new Date().toISOString().slice(0, 10)).length;
+    const diasHechos = new Set(filas('tareas').filter((t) => t.hecha && t.hecha_en).map((t) => fechaISO(new Date(t.hecha_en))));
+    const hechasHoy = filas('tareas').filter((t) => t.hecha && t.hecha_en && fechaISO(new Date(t.hecha_en)) === hoy).length;
+    // Racha: días seguidos con al menos una tarea hecha. Hoy no la rompe si aún no has hecho nada.
+    let racha = 0;
+    for (let d = diasHechos.has(hoy) ? hoy : sumarDias(hoy, -1); diasHechos.has(d); d = sumarDias(d, -1)) racha++;
+    const semana = Array.from({ length: 7 }, (_, i) => sumarDias(hoy, i - 6));
+    const hechasSemana = filas('tareas').filter((t) => t.hecha && t.hecha_en && fechaISO(new Date(t.hecha_en)) >= semana[0]).length;
+    const dinero = resumenMes(hoy.slice(0, 7));
     const dia = new Date().getDay();
     const clases = filas('materias')
       .flatMap((m) => (m.horario ?? []).filter((/** @type {any} */ h) => Number(h.dia) === dia).map((/** @type {any} */ h) => ({ ...h, nombre: m.nombre })))
@@ -36,6 +45,16 @@ export const vistaHoy = {
           <input class="entrada" data-campo-libre="rapida" placeholder="Tarea rápida para hoy" maxlength="300" autocomplete="off" aria-label="Tarea rápida para hoy">
           <button class="boton primario">Añadir</button>
         </form>
+
+        <div class="tarjeta racha">
+          <span class="llama ${racha ? 'viva' : ''}">${icono('fuego')}</span>
+          <div class="cuerpo"><b>${racha ? `${racha} ${racha === 1 ? 'día seguido' : 'días seguidos'}` : 'Empieza tu racha hoy'}</b>
+            <span>${hechasSemana} ${hechasSemana === 1 ? 'tarea hecha' : 'tareas hechas'} en 7 días</span></div>
+          <div class="semana">${semana.map((d) => html`<i class="${diasHechos.has(d) ? 'si' : ''} ${d === hoy ? 'hoy' : ''}"></i>`)}</div>
+        </div>
+        ${dinero.lista.length ? html`<a class="tarjeta dinero-mini" href="#/dinero">
+          <span>Balance del mes</span><b class="${dinero.balance < 0 ? 'rojo' : 'verde'}">${pesos(dinero.balance)}</b>
+        </a>` : ''}
 
         ${atrasadas.length ? html`<section class="seccion"><h2>Atrasadas</h2><div class="lista">${atrasadas.map(filaTarea)}</div></section>` : ''}
         <section class="seccion"><h2>Para hoy <a href="#/tareas">Ver todas</a></h2>

@@ -1,7 +1,7 @@
 // Service worker de Mi Central: deja abrir la app sin conexión y muestra las notificaciones.
 // Con conexión siempre trae los archivos nuevos; sin conexión usa la última copia guardada.
 
-const CACHE = 'mi-central-v1';
+const CACHE = 'mi-central-v2';
 const BASE = ['/', '/estilos/app.css', '/js/app.js', '/js/tema.js', '/manifest.webmanifest', '/iconos/icono-192.png'];
 
 self.addEventListener('install', (ev) => {
@@ -14,19 +14,22 @@ self.addEventListener('activate', (ev) => {
     .then(() => self.clients.claim()));
 });
 
-/** Red primero, con 3 segundos de espera; si falla, la copia guardada. */
-async function redPrimero(pedido) {
+/** Responde al instante con la copia guardada y la actualiza por detrás para la próxima vez. */
+async function guardadoPrimero(pedido, ev) {
   const cache = await caches.open(CACHE);
-  try {
-    const control = new AbortController();
-    const reloj = setTimeout(() => control.abort(), 3000);
-    const r = await fetch(pedido, { signal: control.signal, cache: 'no-cache' });
-    clearTimeout(reloj);
+  const guardado = await cache.match(pedido, { ignoreSearch: pedido.mode === 'navigate' });
+  const deRed = fetch(pedido, { cache: 'no-cache' }).then((r) => {
     if (r.ok) cache.put(pedido, r.clone());
     return r;
+  });
+  if (guardado) {
+    ev.waitUntil(deRed.catch(() => {}));
+    return guardado;
+  }
+  try {
+    return await deRed;
   } catch {
-    const guardado = await cache.match(pedido, { ignoreSearch: pedido.mode === 'navigate' });
-    return guardado ?? (pedido.mode === 'navigate' ? await cache.match('/') : null) ?? Response.error();
+    return (pedido.mode === 'navigate' ? await cache.match('/') : null) ?? Response.error();
   }
 }
 
@@ -34,7 +37,7 @@ self.addEventListener('fetch', (ev) => {
   const url = new URL(ev.request.url);
   if (ev.request.method !== 'GET' || url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/api/')) return; // los datos nunca se guardan aquí
-  ev.respondWith(redPrimero(ev.request));
+  ev.respondWith(guardadoPrimero(ev.request, ev));
 });
 
 self.addEventListener('push', (ev) => {

@@ -14,14 +14,16 @@ import { vistaMetas } from './vistas/metas.js';
 import { vistaMaterias } from './vistas/materias.js';
 import { vistaDatos } from './vistas/datos.js';
 import { vistaMas, vistaActividad, vistaAjustes } from './vistas/ajustes.js';
+import { vistaDinero } from './vistas/dinero.js';
+import { vistaBuscar } from './vistas/buscar.js';
 
 /** @type {Record<string, { pintar: (r: any) => unknown, alEntrar?: (r: any) => void }>} */
 const VISTAS = {
   hoy: vistaHoy, tareas: vistaTareas, notas: vistaNotas, metas: vistaMetas, materias: vistaMaterias,
-  datos: vistaDatos, mas: vistaMas, actividad: vistaActividad, ajustes: vistaAjustes,
+  datos: vistaDatos, dinero: vistaDinero, buscar: vistaBuscar, mas: vistaMas, actividad: vistaActividad, ajustes: vistaAjustes,
 };
 const NAV = [['hoy', 'Hoy', 'casa'], ['tareas', 'Tareas', 'tareas'], ['notas', 'Notas', 'nota'], ['metas', 'Metas', 'meta'], ['mas', 'Más', 'mas']];
-const EN_MAS = ['mas', 'materias', 'datos', 'actividad', 'ajustes'];
+const EN_MAS = ['mas', 'materias', 'datos', 'dinero', 'buscar', 'actividad', 'ajustes'];
 
 const raiz = /** @type {HTMLElement} */ (document.getElementById('app'));
 
@@ -34,6 +36,13 @@ function pantalla() {
   if (E.modo === 'cargando') return html`<div class="arranque"><div class="marca"></div></div>`;
   if (E.modo === 'vincular') return vistaVincular();
   if (E.modo === 'bloqueada') return vistaBloqueada();
+  if (E.candado) {
+    return html`<div class="puerta"><div class="caja">
+      <div class="logo"></div><h1>Mi Central</h1><p class="lema">Bloqueada</p>
+      <button class="boton primario ancho" data-a="candado-abrir">${icono('candado')} Desbloquear</button>
+      ${E.ui.errorCandado ? html`<p class="error">${E.ui.errorCandado}</p>` : ''}
+    </div></div>`;
+  }
   const r = E.ui.ruta ?? leerRuta();
   const activa = EN_MAS.includes(r.vista) ? 'mas' : r.vista;
   return html`
@@ -103,6 +112,10 @@ raiz.addEventListener('submit', (ev) => {
 });
 
 registrar({
+  'candado-abrir': () => {
+    E.ui.errorCandado = '';
+    acceso.desbloquear().catch(() => { E.ui.errorCandado = 'No se pudo verificar. Intenta de nuevo.'; pintar(); });
+  },
   'cerrar-hoja': () => {
     if (E.ui.ajustes?.codigo || E.ui.ajustes?.guion) { E.ui.ajustes.codigo = null; E.ui.ajustes.guion = null; pintar(); return; }
     volver(`#/${E.ui.ruta?.vista ?? 'hoy'}`);
@@ -113,9 +126,17 @@ registrar({
 
 window.addEventListener('online', () => { E.enLinea = true; pintar(); programarSync(); });
 window.addEventListener('offline', () => { E.enLinea = false; pintar(); });
+let ocultaDesde = 0;
+const debeBloquear = () => !E.demo && E.modo === 'app' && !!E.dispositivo?.con_huella && acceso.bloqueoActivo();
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') programarSync();
-  else guardarNotaAbierta();
+  if (document.visibilityState === 'visible') {
+    // Más de un minuto fuera de la app: vuelve a pedir la huella.
+    if (ocultaDesde && Date.now() - ocultaDesde > 60000 && debeBloquear()) { E.candado = true; pintar(); }
+    programarSync();
+  } else {
+    ocultaDesde = Date.now();
+    guardarNotaAbierta();
+  }
 });
 window.addEventListener('pagehide', guardarNotaAbierta);
 setInterval(() => { if (document.visibilityState === 'visible') sincronizar(); }, 30000);
@@ -140,5 +161,6 @@ if (consulta.has('demo')) {
     navigator.serviceWorker.addEventListener('message', (ev) => { if (ev.data?.tipo === 'sincronizar') programarSync(); });
   }
   await acceso.iniciar();
+  if (debeBloquear()) E.candado = true;
 }
 alCambiarRuta();

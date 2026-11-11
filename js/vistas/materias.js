@@ -32,6 +32,19 @@ function leerNotas(textos) {
   return lista;
 }
 
+/** Todas las clases de la semana, día por día. @param {Record<string, any>[]} lista */
+function horarioSemana(lista) {
+  const clases = lista.flatMap((m) => (m.horario ?? []).map((/** @type {any} */ h) => ({ ...h, nombre: m.nombre, color: m.color })));
+  if (!clases.length) return '';
+  const hoy = new Date().getDay();
+  return html`<section class="seccion"><h2>Horario de la semana</h2><div class="horario">
+    ${[1, 2, 3, 4, 5, 6, 0].filter((d) => clases.some((c) => Number(c.dia) === d)).map((d) => html`<div class="dia ${d === hoy ? 'hoy' : ''}">
+      <b>${DIAS[d].texto}</b>
+      ${clases.filter((c) => Number(c.dia) === d).sort((a, b) => a.inicio.localeCompare(b.inicio)).map((c) => html`<div class="clase c-${c.color}"><span>${c.nombre}</span><small>${c.inicio} a ${c.fin}</small></div>`)}
+    </div>`)}
+  </div></section>`;
+}
+
 function hojaMateria() {
   const b = E.ui.borrador;
   if (!b) return '';
@@ -116,6 +129,7 @@ export const vistaMaterias = {
             </a>`;
           })}
         </div></section>` : ''}
+        ${horarioSemana(lista)}
       </main>
       <a class="fab" href="#/materias/nueva" aria-label="Nueva materia">${icono('suma')}</a>
       ${hojaMateria()}`;

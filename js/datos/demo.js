@@ -31,6 +31,9 @@ export function cargarDemo() {
   poner('tareas', [
     { titulo: 'Taller de funciones', detalle: 'Ejercicios 1 al 12 del libro.', fecha: hoy, hora: '14:00:00', prioridad: 1, hecha: false, materia_id: mat, meta_id: meta2, avisos: [60, 1440] },
     { titulo: 'Repasar vocabulario', detalle: '', fecha: hoy, hora: null, prioridad: 3, hecha: true, hecha_en: ahora, materia_id: ing, avisos: [] },
+    { titulo: 'Leer capítulo 3', detalle: '', fecha: sumarDias(hoy, -1), hora: null, prioridad: 2, hecha: true, hecha_en: new Date(Date.now() - 86400000).toISOString(), avisos: [] },
+    { titulo: 'Practicar inglés', detalle: '', fecha: sumarDias(hoy, -2), hora: null, prioridad: 2, hecha: true, hecha_en: new Date(Date.now() - 2 * 86400000).toISOString(), repetir: '', avisos: [] },
+    { titulo: 'Estudiar inglés 20 minutos', detalle: '', fecha: sumarDias(hoy, 2), hora: null, prioridad: 2, hecha: false, repetir: 'semanal', materia_id: ing, avisos: [0] },
     { titulo: 'Informe de laboratorio', detalle: '', fecha: sumarDias(hoy, -1), hora: null, prioridad: 1, hecha: false, materia_id: fis, meta_id: meta2, avisos: [1440] },
     { titulo: 'Exposición de historia', detalle: '', fecha: sumarDias(hoy, 1), hora: '08:00:00', prioridad: 2, hecha: false, avisos: [1440] },
     { titulo: 'Practicar pandas 30 minutos', detalle: '', fecha: sumarDias(hoy, 3), hora: null, prioridad: 2, hecha: false, meta_id: meta1, avisos: [0] },
@@ -39,6 +42,7 @@ export function cargarDemo() {
   poner('notas', [
     { titulo: 'Fórmulas de física', contenido: 'v = d / t\na = (vf - vi) / t\nF = m · a\n\nRepasar unidades antes del examen.', fijada: true, color: 'verde', materia_id: fis },
     { titulo: 'Ideas para proyectos', contenido: 'Un lector de facturas con IA.\nUna app para el inventario del taller.\nUn bot que me recuerde las tareas.', fijada: false, color: 'amarillo' },
+    { titulo: 'Lista para el viaje', contenido: '[x] Cargador\n[x] Audífonos\n[ ] Cuaderno\n[ ] Chaqueta', fijada: false, color: 'azul' },
     { titulo: '', contenido: 'Preguntarle al profe por la fecha del examen final.', fijada: false, color: '' },
     { titulo: 'Verbos irregulares', contenido: 'go · went · gone\nsee · saw · seen\nwrite · wrote · written', fijada: false, color: 'morado', materia_id: ing },
   ]);
@@ -52,6 +56,14 @@ export function cargarDemo() {
     { grupo: 'Habilidades', titulo: 'Python', contenido: 'Junior', orden: 1 },
     { grupo: 'Habilidades', titulo: 'Git y GitHub', contenido: 'Junior', orden: 2 },
     { grupo: 'Idiomas', titulo: 'Español', contenido: 'Nativo', orden: 1 },
+  ]);
+  poner('movimientos', [
+    { tipo: 'ingreso', monto: 80000, categoria: 'Mesada', nota: '', fecha: sumarDias(hoy, -6) },
+    { tipo: 'ingreso', monto: 150000, categoria: 'Proyecto', nota: 'Página para un cliente', fecha: sumarDias(hoy, -3) },
+    { tipo: 'gasto', monto: 12500, categoria: 'Comida', nota: 'Almuerzo', fecha: hoy },
+    { tipo: 'gasto', monto: 6000, categoria: 'Transporte', nota: '', fecha: hoy },
+    { tipo: 'gasto', monto: 35000, categoria: 'Estudio', nota: 'Cuadernos', fecha: sumarDias(hoy, -2) },
+    { tipo: 'gasto', monto: 20000, categoria: 'Diversión', nota: 'Cine', fecha: sumarDias(hoy, -4) },
   ]);
   E.tablas.preferencias = new Map([[ID_PREFS, { id: ID_PREFS, valores: {} }]]);
   E.demo = true;

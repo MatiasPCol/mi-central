@@ -14,14 +14,16 @@ import { hace } from '../nucleo/util.js';
 export const vistaMas = {
   pintar() {
     const enlaces = [
-      ['#/materias', 'Materias y calificaciones', '¿Gano el año?'],
-      ['#/datos', 'Mis datos', 'Perfil, habilidades y proyectos'],
-      ['#/actividad', 'Actividad', 'Todo lo que ha cambiado'],
-      ['#/ajustes', 'Ajustes', 'Dispositivos, avisos, Google y respaldo'],
+      ['#/dinero', 'Dinero', 'Tus ingresos y gastos', 'dinero'],
+      ['#/materias', 'Materias y calificaciones', '¿Gano el año? Y tu horario', 'libro'],
+      ['#/datos', 'Mis datos', 'Perfil, habilidades y proyectos', 'persona'],
+      ['#/buscar', 'Buscar', 'En todo lo tuyo a la vez', 'buscar'],
+      ['#/actividad', 'Actividad', 'Todo lo que ha cambiado', 'reloj'],
+      ['#/ajustes', 'Ajustes', 'Dispositivos, avisos, Google y respaldo', 'ajustes'],
     ];
     return html`${cabecera('Más')}
       <main class="contenido"><div class="lista" style="margin-top:8px">
-        ${enlaces.map(([h, t, d]) => html`<a class="fila" href="${h}"><div class="cuerpo"><div class="titulo">${t}</div><div class="detalle">${d}</div></div>${icono('flecha')}</a>`)}
+        ${enlaces.map(([h, t, d, i]) => html`<a class="fila" href="${h}"><span class="redondo">${icono(i)}</span><div class="cuerpo"><div class="titulo">${t}</div><div class="detalle">${d}</div></div>${icono('flecha')}</a>`)}
       </div></main>`;
   },
 };
@@ -120,6 +122,8 @@ export const vistaAjustes = {
         <section class="seccion"><h2>Este dispositivo</h2><div class="lista">
           <div class="fila"><div class="cuerpo"><div class="titulo">${yo?.nombre}</div><div class="detalle">${yo?.con_huella ? 'Entra con huella' : 'Entra sin huella'}</div></div>
             ${!yo?.con_huella && a.huellaDisponible && !E.demo ? html`<button class="boton" data-a="huella-activar">Activar huella</button>` : ''}</div>
+          ${yo?.con_huella && !E.demo ? html`<label class="interruptor"><div class="cuerpo"><div>Bloquear al salir</div><div class="detalle">Pide Face ID o huella cada vez que abres la app</div></div>
+            <input type="checkbox" data-c="bloqueo-cambiar" ${acceso.bloqueoActivo() ? 'checked' : ''}></label>` : ''}
           <div class="fila"><div class="cuerpo"><div class="titulo">Notificaciones</div><div class="detalle">${textoAvisos}</div></div>
             ${E.demo ? '' : a.avisos === 'activo'
               ? html`<button class="boton" data-a="avisos-probar">Probar</button><button class="boton-icono" data-a="avisos-apagar" aria-label="Apagar notificaciones">${icono('x')}</button>`
@@ -173,6 +177,7 @@ export const vistaAjustes = {
 
 registrar({
   'pref-cambiar': (el) => guardarPrefs({ [/** @type {string} */ (el.dataset.clave)]: /** @type {HTMLInputElement} */ (el).checked }),
+  'bloqueo-cambiar': (el) => { acceso.ponerBloqueo(/** @type {HTMLInputElement} */ (el).checked); pintar(); },
   'pref-hora': (el) => { const v = /** @type {HTMLInputElement} */ (el).value; if (v) guardarPrefs({ resumen_hora: v }); },
   tema: (el) => {
     const v = el.dataset.v;

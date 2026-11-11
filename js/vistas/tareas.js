@@ -7,6 +7,16 @@ import { cabecera, hoja, icono, vacio, opciones } from './comun.js';
 import { fechaISO, sumarDias, fechaCorta, horaCorta, nuevoId } from '../nucleo/util.js';
 
 const AVISOS = [{ min: 0, texto: 'A la hora' }, { min: 60, texto: '1 hora antes' }, { min: 1440, texto: '1 día antes' }];
+const REPETIR = [['', 'No'], ['diaria', 'Cada día'], ['semanal', 'Cada semana'], ['mensual', 'Cada mes']];
+
+/** Fecha de la siguiente repetición. @param {string} fecha @param {string} repetir */
+export function siguienteFecha(fecha, repetir) {
+  if (repetir === 'diaria') return sumarDias(fecha, 1);
+  if (repetir === 'semanal') return sumarDias(fecha, 7);
+  const [a, m, d] = fecha.split('-').map(Number);
+  const ultimo = new Date(a, m + 1, 0).getDate();
+  return fechaISO(new Date(a, m, Math.min(d, ultimo)));
+}
 
 /** @param {Record<string, any>} a @param {Record<string, any>} b */
 function orden(a, b) {
@@ -22,6 +32,7 @@ export function filaTarea(t) {
   const partes = [];
   if (t.fecha) partes.push(html`${atrasada ? html`<b>${fechaCorta(t.fecha)}</b>` : fechaCorta(t.fecha)}${t.hora ? ` ${horaCorta(t.hora)}` : ''}`);
   if (materia) partes.push(materia.nombre);
+  if (t.repetir) partes.push('se repite');
   return html`<div class="fila ${t.hecha ? 'hecha' : ''} ${atrasada ? 'alerta' : ''}" data-k="t-${t.id}">
     <button class="check p${t.prioridad} ${t.hecha ? 'si' : ''}" data-a="tarea-marcar" data-id="${t.id}" aria-label="${t.hecha ? 'Marcar como pendiente' : 'Marcar como hecha'}">${icono('si')}</button>
     <a class="cuerpo" href="#/tareas/${t.id}">
@@ -61,6 +72,9 @@ function hojaTarea() {
       </div></div>
       ${b.fecha ? html`<div class="campo"><span>Avisarme</span><div class="chips">
         ${AVISOS.map((a) => html`<button type="button" class="chip ${b.avisos.includes(a.min) ? 'activo' : ''}" data-a="tarea-aviso" data-min="${a.min}">${a.texto}</button>`)}
+      </div></div>
+      <div class="campo"><span>Repetir</span><div class="chips">
+        ${REPETIR.map(([v, t]) => html`<button type="button" class="chip ${(b.repetir ?? '') === v ? 'activo' : ''}" data-a="tarea-repetir" data-v="${v}">${t}</button>`)}
       </div></div>` : ''}
       <div class="dos">
         <label class="campo"><span>Materia</span><select class="entrada" data-campo="materia_id">${opciones([{ valor: '', texto: 'Ninguna' }, ...materias], b.materia_id)}</select></label>
@@ -83,7 +97,7 @@ export const vistaTareas = {
     E.ui.borrador = t
       ? { ...t, avisos: [...(t.avisos ?? [])] }
       : { id: nuevoId(), nueva: true, titulo: E.ui.semilla?.titulo ?? '', detalle: '', fecha: E.ui.semilla?.fecha ?? null, hora: null, prioridad: 2,
-          hecha: false, materia_id: E.ui.semilla?.materia_id ?? null, meta_id: E.ui.semilla?.meta_id ?? null, proyecto_id: null,
+          hecha: false, repetir: '', materia_id: E.ui.semilla?.materia_id ?? null, meta_id: E.ui.semilla?.meta_id ?? null, proyecto_id: null,
           avisos: E.ui.semilla?.fecha ? [...prefs().avisos_predeterminados] : [] };
     E.ui.semilla = null;
   },
@@ -126,8 +140,15 @@ registrar({
   'tarea-marcar': (el) => {
     const t = fila('tareas', el.dataset.id);
     if (!t) return;
-    guardar('tareas', { ...t, hecha: !t.hecha, hecha_en: t.hecha ? null : new Date().toISOString() });
+    guardar('tareas', { ...t, hecha: !t.hecha, hecha_en: t.hecha ? null : new Date().toISOString(), repetir: t.hecha ? t.repetir : '' });
+    // Una tarea que se repite deja lista la siguiente al marcarla.
+    if (!t.hecha && t.repetir && t.fecha) {
+      const { evento_id, rev, ...copia } = t;
+      guardar('tareas', { ...copia, id: nuevoId(), creado_en: new Date().toISOString(), hecha: false, hecha_en: null, fecha: siguienteFecha(t.fecha, t.repetir) });
+      avisar('Hecha. La siguiente ya quedó programada.');
+    }
   },
+  'tarea-repetir': (el) => { E.ui.borrador.repetir = el.dataset.v ?? ''; pintar(); },
   'tarea-fecha': (el) => {
     const b = E.ui.borrador;
     const antes = b.fecha;
