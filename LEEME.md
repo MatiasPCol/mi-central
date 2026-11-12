@@ -36,6 +36,12 @@ Desvincular un dispositivo le quita el acceso al instante y borra sus datos loca
 - El modelo es `gemini-3.1-flash-lite`. Para cambiarlo sin tocar código: secreto `GEMINI_MODELO`.
 - En el plan gratuito Google puede usar lo que se envía para mejorar sus modelos, y personas suyas pueden revisarlo.
 
+## Reto (juego)
+
+- Preguntas contra el reloj, con tres vidas: "¿qué imprime este código?" en Python y preguntas de inglés. Explica cada respuesta.
+- Las preguntas están en `js/datos/reto-python.js` y `js/datos/reto-ingles.js`. El récord se guarda solo en el dispositivo.
+- `pruebas/reto.test.mjs` corre cada pedazo de Python y comprueba que la respuesta marcada como buena sea la salida real.
+
 ## Probar en el computador
 
 ```bash
@@ -47,7 +53,7 @@ Abre `http://localhost:5173/?demo` para ver la app con datos inventados.
 Pruebas del servidor, sin instalar Node (usa el motor de VS Code):
 
 ```bash
-bash herramientas/node.sh --test pruebas/cripto.test.mjs pruebas/ia.test.mjs
+bash herramientas/node.sh --test pruebas/cripto.test.mjs pruebas/ia.test.mjs pruebas/reto.test.mjs
 ```
 
 ## Carpetas
