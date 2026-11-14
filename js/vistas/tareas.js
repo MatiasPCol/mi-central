@@ -5,6 +5,7 @@ import { E, filas, fila, guardar, borrar, restaurar, prefs, pintar } from '../da
 import { registrar, ir, volver, avisar } from '../nucleo/acciones.js';
 import { cabecera, hoja, icono, vacio, opciones } from './comun.js';
 import { fechaISO, sumarDias, fechaCorta, horaCorta, nuevoId } from '../nucleo/util.js';
+import { achicar, fotosDe, guardarFoto, galeria } from './fotos.js';
 
 const AVISOS = [{ min: 0, texto: 'A la hora' }, { min: 60, texto: '1 hora antes' }, { min: 1440, texto: '1 día antes' }];
 const REPETIR = [['', 'No'], ['diaria', 'Cada día'], ['semanal', 'Cada semana'], ['mensual', 'Cada mes']];
@@ -33,12 +34,14 @@ export function filaTarea(t) {
   if (t.fecha) partes.push(html`${atrasada ? html`<b>${fechaCorta(t.fecha)}</b>` : fechaCorta(t.fecha)}${t.hora ? ` ${horaCorta(t.hora)}` : ''}`);
   if (materia) partes.push(materia.nombre);
   if (t.repetir) partes.push('se repite');
+  const fotos = fotosDe('tarea_id', t.id).length;
   return html`<div class="fila ${t.hecha ? 'hecha' : ''} ${atrasada ? 'alerta' : ''}" data-k="t-${t.id}">
     <button class="check p${t.prioridad} ${t.hecha ? 'si' : ''}" data-a="tarea-marcar" data-id="${t.id}" aria-label="${t.hecha ? 'Marcar como pendiente' : 'Marcar como hecha'}">${icono('si')}</button>
     <a class="cuerpo" href="#/tareas/${t.id}">
       <div class="titulo">${t.titulo || '(sin título)'}</div>
       ${partes.length ? html`<div class="detalle">${partes.map((p, i) => html`${i ? ' · ' : ''}${p}`)}</div>` : ''}
     </a>
+    ${fotos ? html`<span class="clip" aria-label="${fotos === 1 ? 'Tiene una foto' : `Tiene ${fotos} fotos`}">${icono('foto')}${fotos > 1 ? fotos : ''}</span>` : ''}
   </div>`;
 }
 
@@ -81,6 +84,12 @@ function hojaTarea() {
         <label class="campo"><span>Meta</span><select class="entrada" data-campo="meta_id">${opciones([{ valor: '', texto: 'Ninguna' }, ...metas], b.meta_id)}</select></label>
       </div>
       <label class="campo"><span>Detalles</span><textarea class="entrada" data-campo="detalle" maxlength="20000" placeholder="Opcional">${b.detalle}</textarea></label>
+      <div class="campo"><span>Fotos</span>
+        ${galeria([...fotosDe('tarea_id', b.id), ...b.fotosNuevas])}
+        <label class="boton ancho">${icono('foto')} Tomar foto o elegir una
+          <input type="file" accept="image/*" data-c="tarea-foto" hidden></label>
+        <p class="nota-pie">Se guardan al tocar Guardar.</p>
+      </div>
       <div class="pie">
         ${b.nueva ? '' : html`<button type="button" class="boton peligro" data-a="tarea-borrar">${icono('basura')}</button>`}
         <button class="boton primario">Guardar</button>
@@ -95,10 +104,10 @@ export const vistaTareas = {
     const t = ruta.id === 'nueva' ? null : fila('tareas', ruta.id);
     if (ruta.id !== 'nueva' && !t) { E.ui.borrador = null; return; }
     E.ui.borrador = t
-      ? { ...t, avisos: [...(t.avisos ?? [])] }
+      ? { ...t, avisos: [...(t.avisos ?? [])], fotosNuevas: [] }
       : { id: nuevoId(), nueva: true, titulo: E.ui.semilla?.titulo ?? '', detalle: '', fecha: E.ui.semilla?.fecha ?? null, hora: null, prioridad: 2,
           hecha: false, repetir: '', materia_id: E.ui.semilla?.materia_id ?? null, meta_id: E.ui.semilla?.meta_id ?? null, proyecto_id: null,
-          avisos: E.ui.semilla?.fecha ? [...prefs().avisos_predeterminados] : [] };
+          avisos: E.ui.semilla?.fecha ? [...prefs().avisos_predeterminados] : [], fotosNuevas: [] };
     E.ui.semilla = null;
   },
   pintar() {
@@ -163,18 +172,34 @@ registrar({
     b.avisos = b.avisos.includes(m) ? b.avisos.filter((/** @type {number} */ x) => x !== m) : [...b.avisos, m];
     pintar();
   },
+  'tarea-foto': async (el) => {
+    const campo = /** @type {HTMLInputElement} */ (el);
+    const archivo = campo.files?.[0];
+    campo.value = '';
+    if (!archivo) return;
+    try {
+      const foto = await achicar(archivo);
+      E.ui.borrador.fotosNuevas.push({ ...foto, id: nuevoId() });
+      pintar();
+    } catch (e) {
+      avisar(e instanceof Error && e.message.includes('grande') ? e.message : 'No se pudo leer esa foto.');
+    }
+  },
   'tarea-guardar': () => {
-    const { nueva, ...b } = E.ui.borrador;
+    const { nueva, fotosNuevas, ...b } = E.ui.borrador;
     if (!b.titulo.trim()) { avisar('Escribe qué hay que hacer.'); return; }
     guardar('tareas', { ...b, titulo: b.titulo.trim(), fecha: b.fecha || null, hora: b.fecha && b.hora ? b.hora : null,
       materia_id: b.materia_id || null, meta_id: b.meta_id || null });
+    for (const f of fotosNuevas) guardarFoto({ tarea_id: b.id }, f, f.id);
     volver('#/tareas');
   },
   'tarea-borrar': () => {
     const id = E.ui.borrador.id;
+    const fotos = fotosDe('tarea_id', id).map((f) => f.id);
     borrar('tareas', id);
+    fotos.forEach((f) => borrar('fotos', f));
     volver('#/tareas');
-    avisar('Tarea borrada', { etiqueta: 'Deshacer', accion: () => restaurar('tareas', id) });
+    avisar('Tarea borrada', { etiqueta: 'Deshacer', accion: () => { restaurar('tareas', id); fotos.forEach((f) => restaurar('fotos', f)); } });
   },
 });
 

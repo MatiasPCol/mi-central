@@ -125,7 +125,8 @@ function persistir() {
   clearTimeout(relojPersistir);
   relojPersistir = setTimeout(() => {
     almacen.escribir('datos', {
-      tablas: Object.fromEntries(TABLAS.map((t) => [t, Array.from(E.tablas[t].values())])),
+      tablas: Object.fromEntries(TABLAS.map((t) => [t,
+        t === 'fotos' ? Array.from(E.tablas[t].values()).map(({ datos, ...f }) => f) : Array.from(E.tablas[t].values())])),
       pendientes: Array.from(E.pendientes.values()),
       cursor: E.cursor,
     }).catch(() => {});
@@ -138,6 +139,13 @@ export async function cargarLocal() {
   for (const t of TABLAS) E.tablas[t] = new Map((d.tablas?.[t] ?? []).map((/** @type {Fila} */ f) => [f.id, f]));
   E.pendientes = new Map((d.pendientes ?? []).map((/** @type {any} */ p) => [`${p.tabla}:${p.id}`, { ...p, n: ++contador }]));
   E.cursor = d.cursor ?? 0;
+  // Las fotos que aún no han subido necesitan su imagen completa, guardada aparte.
+  for (const p of E.pendientes.values()) {
+    if (p.tabla !== 'fotos' || p.borrar) continue;
+    const f = E.tablas.fotos.get(p.id);
+    const datos = f && !f.datos ? await almacen.leer(`foto:${p.id}`).catch(() => null) : null;
+    if (datos) E.tablas.fotos.set(p.id, { ...f, datos });
+  }
 }
 
 /** Borra los datos de memoria (al desvincular o cerrar sesión con borrado). */
@@ -178,7 +186,8 @@ export async function sincronizar() {
       for (const f of r.filas?.[t] ?? []) {
         if (E.pendientes.has(`${t}:${f.id}`)) continue;
         if (f.eliminado_en) mapa.delete(f.id);
-        else mapa.set(f.id, f);
+        // La imagen completa no viaja en cada sincronización: se conserva la que ya estuviera.
+        else mapa.set(f.id, t === 'fotos' ? { ...f, datos: mapa.get(f.id)?.datos ?? null } : f);
       }
     }
     E.cursor = r.cursor;

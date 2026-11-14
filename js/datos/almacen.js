@@ -34,6 +34,17 @@ export async function escribir(clave, valor) {
   });
 }
 
+/** @param {string} clave */
+export async function quitar(clave) {
+  const bd = await abrir();
+  return new Promise((ok, mal) => {
+    const t = bd.transaction('kv', 'readwrite');
+    t.objectStore('kv').delete(clave);
+    t.oncomplete = () => ok(undefined);
+    t.onerror = () => mal(t.error);
+  });
+}
+
 export async function borrarTodo() {
   const bd = await abrir();
   return new Promise((ok, mal) => {

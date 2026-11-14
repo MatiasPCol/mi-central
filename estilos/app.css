@@ -458,3 +458,11 @@ body::before { background:
 .reto-explica.mal b { color: var(--rojo); }
 .reto-explica p { margin: 0; color: var(--suave); line-height: 1.5; }
 .contenido.reto > * { animation: none; }
+/* Fotos en tareas y notas, y el selector de cuándo en Hoy */
+.segmento.cuando { margin-top: 8px; }
+.clip { display: flex; align-items: center; gap: 2px; flex: none; font-size: 12px; font-weight: 700; color: var(--suave); }
+.clip svg { width: 17px; height: 17px; }
+.visor img.borrosa { filter: blur(6px); }
+.visor .rotulo { color: #fff; }
+.campo .fotos { padding-top: 0; }
+.boton input[type=file] { display: none; }
