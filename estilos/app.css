@@ -424,6 +424,40 @@ body::before { background:
   .nav a { font-size: 9.5px; }
   .plata .grande { font-size: 34px; }
 }
+
+/* ---------- Reto (juego) ---------- */
+.reto-hola { text-align: center; padding: 26px 8px 18px; }
+.reto-hola .redondo { margin: 0 auto 12px; width: 56px; height: 56px; border-radius: 19px; background: color-mix(in srgb, var(--ambar) 16%, transparent); color: var(--ambar); }
+.reto-hola h2 { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+.reto-hola p { color: var(--suave); margin: 6px auto 0; max-width: 40ch; }
+.reto-hola .grande { margin: 8px 0 4px; font-size: 52px; }
+.reto .lista .fila { cursor: pointer; }
+.reto .lista .fila > svg { width: 18px; height: 18px; color: var(--suave); flex: none; }
+.reto-marcador { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.reto-marcador b { margin-left: auto; font-size: 24px; font-weight: 820; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.reto-vidas { display: flex; gap: 6px; }
+.reto-vidas i { width: 13px; height: 13px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--rojo) 55%, transparent); }
+.reto-vidas i.viva { background: var(--rojo); border-color: var(--rojo); box-shadow: 0 0 9px color-mix(in srgb, var(--rojo) 70%, transparent); }
+.reto-tiempo { height: 6px; border-radius: 6px; background: var(--capa-2); overflow: hidden; margin-top: 12px; }
+.reto-tiempo i { display: block; height: 100%; border-radius: 6px; background: var(--degradado); transition: width 0.2s linear; }
+.reto-tiempo.poco i { background: var(--rojo); }
+.reto-rotulo { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; color: var(--suave); font-size: 13px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.reto-pregunta { margin: 12px 2px 8px; font-weight: 700; }
+.reto-pregunta.grande-p { font-size: 20px; line-height: 1.35; margin: 18px 2px 16px; }
+.reto-codigo { margin: 0; padding: 14px 16px; border-radius: var(--radio); background: #0a0c12; border: 1px solid var(--linea); font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--texto); tab-size: 4; }
+.reto-opciones { display: grid; gap: 9px; margin-top: 14px; }
+.reto-opcion { width: 100%; min-height: 50px; padding: 12px 15px; border-radius: 15px; border: 1px solid var(--linea); background: var(--capa); text-align: left; font-weight: 620; overflow-wrap: anywhere; transition: transform 0.1s, border-color 0.15s, background 0.15s; }
+.reto-opciones.mono .reto-opcion { font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: 14.5px; }
+.reto-opcion:not(:disabled):active { transform: scale(0.98); border-color: var(--acento); }
+.reto-opcion:disabled { opacity: 0.55; }
+.reto-opcion.bien { opacity: 1; border-color: var(--acento); background: var(--acento-suave); color: var(--acento); }
+.reto-opcion.mal { opacity: 1; border-color: var(--rojo); background: color-mix(in srgb, var(--rojo) 13%, transparent); color: var(--rojo); }
+.reto-explica { margin: 14px 0 12px; }
+.reto-explica b { display: block; margin-bottom: 4px; }
+.reto-explica.bien b { color: var(--acento); }
+.reto-explica.mal b { color: var(--rojo); }
+.reto-explica p { margin: 0; color: var(--suave); line-height: 1.5; }
+.contenido.reto > * { animation: none; }
 /* Fotos en tareas y notas, y el selector de cuándo en Hoy */
 .segmento.cuando { margin-top: 8px; }
 .clip { display: flex; align-items: center; gap: 2px; flex: none; font-size: 12px; font-weight: 700; color: var(--suave); }

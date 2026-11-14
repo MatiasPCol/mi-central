@@ -18,15 +18,16 @@ import { vistaDinero } from './vistas/dinero.js';
 import { vistaBuscar } from './vistas/buscar.js';
 import { vistaRutinas } from './vistas/rutinas.js';
 import { vistaAsistente } from './vistas/asistente.js';
+import { vistaReto } from './vistas/reto.js';
 import { visor } from './vistas/fotos.js';
 
 /** @type {Record<string, { pintar: (r: any) => unknown, alEntrar?: (r: any) => void }>} */
 const VISTAS = {
   hoy: vistaHoy, tareas: vistaTareas, notas: vistaNotas, metas: vistaMetas, materias: vistaMaterias,
-  datos: vistaDatos, dinero: vistaDinero, rutinas: vistaRutinas, ia: vistaAsistente, buscar: vistaBuscar, mas: vistaMas, actividad: vistaActividad, ajustes: vistaAjustes,
+  datos: vistaDatos, dinero: vistaDinero, rutinas: vistaRutinas, ia: vistaAsistente, reto: vistaReto, buscar: vistaBuscar, mas: vistaMas, actividad: vistaActividad, ajustes: vistaAjustes,
 };
 const NAV = [['hoy', 'Hoy', 'casa'], ['tareas', 'Tareas', 'tareas'], ['dinero', 'Dinero', 'dinero'], ['rutinas', 'Rutinas', 'ciclo'], ['notas', 'Notas', 'nota'], ['mas', 'Más', 'mas']];
-const EN_MAS = ['mas', 'metas', 'materias', 'datos', 'ia', 'buscar', 'actividad', 'ajustes'];
+const EN_MAS = ['mas', 'metas', 'materias', 'datos', 'ia', 'reto', 'buscar', 'actividad', 'ajustes'];
 
 const raiz = /** @type {HTMLElement} */ (document.getElementById('app'));
 

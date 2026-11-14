@@ -15,6 +15,7 @@ export const vistaMas = {
   pintar() {
     const enlaces = [
       ['#/ia', 'Asistente', 'Pregúntale lo que sea sobre lo tuyo', 'chispa'],
+      ['#/reto', 'Reto', 'Juego de Python e inglés contra el reloj', 'juego'],
       ['#/metas', 'Metas', 'A dónde quieres llegar', 'meta'],
       ['#/materias', 'Materias y calificaciones', '¿Gano el año? Y tu horario', 'libro'],
       ['#/datos', 'Mis datos', 'Perfil, habilidades y proyectos', 'persona'],
