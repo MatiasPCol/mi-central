@@ -18,6 +18,7 @@ import { vistaDinero } from './vistas/dinero.js';
 import { vistaBuscar } from './vistas/buscar.js';
 import { vistaRutinas } from './vistas/rutinas.js';
 import { vistaAsistente } from './vistas/asistente.js';
+import { visor } from './vistas/fotos.js';
 
 /** @type {Record<string, { pintar: (r: any) => unknown, alEntrar?: (r: any) => void }>} */
 const VISTAS = {
@@ -52,6 +53,7 @@ function pantalla() {
     <div class="destellos" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
     ${VISTAS[r.vista].pintar(r)}
     <nav class="nav">${NAV.map(([v, t, i]) => html`<a href="#/${v}" class="${activa === v ? 'activa' : ''}">${icono(i)}${t}</a>`)}</nav>
+    ${visor()}
     ${E.ui.toast ? html`<div class="toast" role="status">${E.ui.toast.texto}${E.ui.toast.etiqueta ? html`<button data-a="toast-boton">${E.ui.toast.etiqueta}</button>` : ''}</div>` : ''}`;
 }
 

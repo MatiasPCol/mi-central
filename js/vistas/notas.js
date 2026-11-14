@@ -6,6 +6,7 @@ import { E, filas, fila, guardar, borrar, restaurar, pintar } from '../datos/est
 import { registrar, volver, avisar } from '../nucleo/acciones.js';
 import { cabecera, icono, vacio, opciones } from './comun.js';
 import { plano, hace, nuevoId, conPausa } from '../nucleo/util.js';
+import { achicar, fotosDe, guardarFoto, galeria } from './fotos.js';
 
 const COLORES = ['', 'amarillo', 'verde', 'azul', 'rosa', 'morado'];
 const RENGLON = /^\[( |x)\] ?(.*)$/;
@@ -27,17 +28,14 @@ function renglones(contenido) {
 /** @param {{ hecho: boolean, texto: string }[]} lista */
 const aTexto = (lista) => lista.map((r) => `[${r.hecho ? 'x' : ' '}] ${r.texto}`).join('\n');
 
-/** @param {string} notaId */
-const fotosDe = (notaId) => filas('fotos').filter((f) => f.nota_id === notaId).sort((a, b) => a.creado_en.localeCompare(b.creado_en));
-
 /** @param {Record<string, any>} n */
 function tarjeta(n) {
   const lista = esLista(n.contenido);
   const primera = lista ? '' : n.contenido.split('\n').find((/** @type {string} */ l) => l.trim()) ?? '';
-  const foto = fotosDe(n.id)[0];
+  const foto = fotosDe('nota_id', n.id)[0];
   const items = lista ? renglones(n.contenido) : [];
   return html`<a class="nota c-${n.color}" href="#/notas/${n.id}" data-k="n-${n.id}">
-    ${foto ? html`<img class="miniatura" src="${foto.datos}" alt="">` : ''}
+    ${foto ? html`<img class="miniatura" src="${foto.mini || foto.datos}" alt="">` : ''}
     <b>${n.fijada ? icono('pin') : ''}${n.titulo || primera.slice(0, 60) || (lista ? 'Lista' : foto ? 'Foto' : 'Nota vacía')}</b>
     ${lista
       ? html`<p>${items.slice(0, 5).map((r) => html`<span class="${r.hecho ? 'tachado' : ''}">${r.hecho ? '☑' : '☐'} ${r.texto}</span><br>`)}${items.length > 5 ? `y ${items.length - 5} más` : ''}</p>`
@@ -55,31 +53,11 @@ function guardarBorrador(forzar = false) {
 }
 const guardarLuego = conPausa(guardarBorrador, 1200);
 
-/** Achica la foto para que pese poco. @param {File} archivo @returns {Promise<string>} */
-async function achicar(archivo) {
-  const mapa = await createImageBitmap(archivo);
-  let lado = 1100;
-  let calidad = 0.62;
-  for (let intento = 0; intento < 4; intento++) {
-    const escala = Math.min(1, lado / Math.max(mapa.width, mapa.height));
-    const lienzo = document.createElement('canvas');
-    lienzo.width = Math.round(mapa.width * escala);
-    lienzo.height = Math.round(mapa.height * escala);
-    /** @type {CanvasRenderingContext2D} */ (lienzo.getContext('2d')).drawImage(mapa, 0, 0, lienzo.width, lienzo.height);
-    const datos = lienzo.toDataURL('image/jpeg', calidad);
-    if (datos.length < 600000) return datos;
-    lado *= 0.75;
-    calidad -= 0.1;
-  }
-  throw new Error('La foto es demasiado grande.');
-}
-
 function editor() {
   const b = E.ui.borrador;
   const existe = fila('notas', b.id);
   const lista = esLista(b.contenido);
-  const fotos = fotosDe(b.id);
-  const grande = E.ui.fotoGrande ? fila('fotos', E.ui.fotoGrande) : null;
+  const fotos = fotosDe('nota_id', b.id);
   const materias = filas('materias').sort((x, y) => x.nombre.localeCompare(y.nombre)).map((m) => ({ valor: m.id, texto: m.nombre }));
   return html`<div class="editor c-${b.color}" data-k="editor">
     <div class="barra-editor">
@@ -101,7 +79,7 @@ function editor() {
           <button class="boton ancho" data-a="nota-renglon-nuevo" style="margin-top:6px">${icono('suma')} Agregar renglón</button>
         </div>`
         : html`<textarea data-campo="contenido" data-i="nota-auto" placeholder="Escribe aquí…" maxlength="200000">${b.contenido}</textarea>`}
-      ${fotos.length ? html`<div class="fotos">${fotos.map((f) => html`<button data-a="nota-foto-ver" data-id="${f.id}" data-k="f-${f.id}" aria-label="Ver foto"><img src="${f.datos}" alt="Foto de la nota"></button>`)}</div>` : ''}
+      ${galeria(fotos)}
     </div>
     <div class="pie-editor">
       ${COLORES.map((c) => html`<button class="color c-${c} ${b.color === c ? 'activo' : ''}" data-a="nota-color" data-c="${c}" aria-label="Color ${c || 'normal'}"></button>`)}
@@ -109,17 +87,13 @@ function editor() {
         ${opciones([{ valor: '', texto: 'Sin materia' }, ...materias], b.materia_id)}
       </select>
     </div>
-    ${grande ? html`<div class="visor" data-a="nota-foto-cerrar">
-      <img src="${grande.datos}" alt="Foto de la nota">
-      <button class="boton peligro" data-a="nota-foto-borrar" data-id="${grande.id}">${icono('basura')} Borrar foto</button>
-    </div>` : ''}
   </div>`;
 }
 
 export const vistaNotas = {
   /** @param {{ id: string | null }} ruta */
   alEntrar(ruta) {
-    E.ui.fotoGrande = null;
+    E.ui.foto = null;
     if (!ruta.id) { E.ui.borrador = null; return; }
     const n = ruta.id === 'nueva' ? null : fila('notas', ruta.id);
     if (ruta.id !== 'nueva' && !n) { E.ui.borrador = null; return; }
@@ -183,20 +157,17 @@ registrar({
     campo.value = '';
     if (!archivo) return;
     try {
-      const datos = await achicar(archivo);
+      const foto = await achicar(archivo);
       guardarBorrador(true);
-      guardar('fotos', { id: nuevoId(), nota_id: E.ui.borrador.id, datos });
+      guardarFoto({ nota_id: E.ui.borrador.id }, foto);
     } catch (e) {
       avisar(e instanceof Error && e.message.includes('grande') ? e.message : 'No se pudo leer esa foto.');
     }
   },
-  'nota-foto-ver': (el) => { E.ui.fotoGrande = el.dataset.id; pintar(); },
-  'nota-foto-cerrar': () => { E.ui.fotoGrande = null; pintar(); },
-  'nota-foto-borrar': (el) => { borrar('fotos', /** @type {string} */ (el.dataset.id)); E.ui.fotoGrande = null; pintar(); },
   'nota-borrar': () => {
     const id = E.ui.borrador.id;
     const existia = !!fila('notas', id);
-    const fotos = fotosDe(id).map((f) => f.id);
+    const fotos = fotosDe('nota_id', id).map((f) => f.id);
     E.ui.borrador.titulo = '';
     E.ui.borrador.contenido = '';
     if (existia) borrar('notas', id);
